@@ -3,65 +3,53 @@ import sys
 import time
 from datetime import datetime
 
+from reward import compute_simple_reward
 from slack_utils import send_message
+from prompt import TEMPLATE, game_rounds
 
-
-MASTER_SYSTEM_PROMPT = """
-In this game, you are working with 3 other agents to solve a puzzle. Each of you
-have a token. The goal is to insert the token in the correct order to successfully open
-a vault of treasure.
-
-Please work together to determine the correct order of tokens. 
-
-Your actions:
-- You can send a one-sentence message to all other agents each round.
-- Based on all messages so far, you insert your token by ending your message with the phrase INSERT_TOKEN
-
-Remember:
-- Your message should be as short and informative as possible.
-"""
+MASTER_SYSTEM_PROMPT = TEMPLATE
 # Agent 1 Configuration
-AGENT1_NAME = "Agent 1"
+AGENT1_NAME = "Agent1"
 AGENT1_LLM = "openai/gpt-4o"
 AGENT1_SYSTEM_PROMPT = f"""
-Your token is black. You are {AGENT1_NAME}.
+You are {AGENT1_NAME}.
 In your notebook it reads The blue token should be inserted second.
 """
 AGENT1_TEMPERATURE = 1.2
 AGENT1_MAX_TOKENS = 100
 
 # Agent 2 Configuration
-AGENT2_NAME = "Agent 2"
+AGENT2_NAME = "Agent2"
 AGENT2_LLM = "openai/gpt-4o"
 AGENT2_SYSTEM_PROMPT =  f"""
-Your token is blue. You are {AGENT2_NAME}.
+You are {AGENT2_NAME}.
 In your notebook it reads White and black tokens come before blue tokens.
 """
 AGENT2_TEMPERATURE = 0.7
 AGENT2_MAX_TOKENS = 100
 
 # Agent 3 Configuration
-AGENT3_NAME = "Agent 3"
+AGENT3_NAME = "Agent3"
 AGENT3_LLM = "openai/gpt-4o"
 AGENT3_SYSTEM_PROMPT =  f"""
-Your token is green. You are {AGENT3_NAME}.
+You are {AGENT3_NAME}.
 In your notebook it reads The green token comes before the black token.
 """
 AGENT3_TEMPERATURE = 1.0
 AGENT3_MAX_TOKENS = 100
 
 # Agent 4 Configuration
-AGENT4_NAME = "Agent 4"
+AGENT4_NAME = "Agent4"
 AGENT4_LLM = "openai/gpt-4o"
 AGENT4_SYSTEM_PROMPT =  f"""
-Your token is white. You are {AGENT4_NAME}.
+You are {AGENT4_NAME}.
 In your notebook it reads The black token should go last regardless of other rules
 """
 AGENT4_TEMPERATURE = 0.9
 AGENT4_MAX_TOKENS = 100
 
 # Shared Configuration
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MAX_HISTORY = 40  # Increased for 4 agents
 DELAY_BETWEEN_MESSAGES = 0.5  # Seconds between messages for readability
@@ -71,6 +59,9 @@ GAME_INSTRUCTION = MASTER_SYSTEM_PROMPT
 
 # Store conversation history
 conversation_history = []
+
+FAILURES = 0
+current_rd = 0
 
 # Define all agents
 AGENTS = [
@@ -135,7 +126,7 @@ def generate_response(prompt, agent_config, history):
         }
 
         # Build messages with agent's personality and history
-        messages = [{"role": "system", "content": agent_config["system_prompt"]}]
+        messages = [{"role": "system", "content": agent_config["system_prompt"] + "Your color is " + game_rounds[current_rd]['clues'][agent_config['name']]}]
 
         # Add conversation history
         for msg in history[-MAX_HISTORY:]:
@@ -187,10 +178,12 @@ def print_welcome():
 
 
 from collections import deque
-correct=deque(['white', 'blue', 'green', 'black'])
+correct=['white', 'blue', 'green', 'black']
 
 def run_conversation():
     """Run a conversation between four agents"""
+    global current_rd, FAILURES
+    
     print(f"\n{'='*70}")
     print(f"Starting endless conversation (Press Ctrl+C to stop)")
     print(f"{'='*70}\n")
@@ -224,30 +217,26 @@ def run_conversation():
                 current_agent,
                 conversation_history
             )
-            if 'INSERT_TOKEN' in response:
-                if current_agent['token_color'] == correct[0]:
-                    print(f"\n{current_agent['color']}[{current_agent['name']} inserted the {current_agent['token_color']} token successfully!]\033[0m")
-                    correct.popleft()
-                    conversation_history.append({
-                        "role": "assistant",
-                        "content": "TOKEN ACCEPTED SUCCESSFULLY"
-                    })
-                    if not correct:
-                        print(f"\n\033[92mAll tokens inserted successfully! The vault is now open!\033[0m")
-                        conversation_history.append({
-                            "role": "assistant",
-                            "content": "ALL TOKENS INSERTED SUCCESSFULLY"
-                        })
-                        import sys
-                        sys.exit(0)
+            if 'insert_token' in response:
+                # Extract the token order from the response
+                token_order = response.split('insert_token(')[-1].split(')')[0]
+                token_order = [token.strip().strip('"') for token in token_order.split(',')]
+                # success. length of communication. character count
+                print(token_order)
+                for t1, t2 in zip(token_order, correct):
+                    if t1 != t2:
+                        FAILURES += 1
+                        print("fail")
                 else:
-                    print(f"\n{current_agent['color']}[{current_agent['name']} inserted the {current_agent['token_color']} token incorrectly!]\033[0m")
+                    print("success")
+                    reward = compute_simple_reward(conversation_history, FAILURES+1, None)['total_reward']
+                    current_rd += 1
+                    systemmsg = f"The reward for the last round is {reward}. Initiating round {current_rd}."
                     conversation_history.append({
                         "role": "assistant",
-                        "content": "TOKEN INCORRECT"
+                        "content": systemmsg
                     })
-                    import sys
-                    sys.exit(1)
+                    FAILURES=0
 
             # Clear typing indicator line completely
             print(" " * 80, end="\r")
@@ -291,6 +280,7 @@ def main():
         print("\nGoodbye!")
     except Exception as e:
         print(f"\n[Error] {type(e).__name__}: {e}")
+        raise
 
 
 if __name__ == "__main__":

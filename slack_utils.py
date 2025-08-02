@@ -25,7 +25,7 @@ SLACK_AGENT_TOKEN = os.environ['SLACK_OAUTH_TOKEN']
 SLACK_CHANNEL_ID = os.environ['SLACK_CHANNEL_ID']
 
 # OpenRouter Configuration
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # Initialize Slack client

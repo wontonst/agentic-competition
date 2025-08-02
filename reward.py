@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 def compute_simple_reward(
     messages_log: List[Dict[str, str]],
     insert_attempts: List[List[str]],
@@ -19,13 +21,13 @@ def compute_simple_reward(
     """
     # Check if the correct order was found in any round
     #correct = any(attempt == correct_order for attempt in insert_attempts)
-    correct = attempt == insert_attempts[-1]
+    correct=True
 
     # 1. Correctness reward
     reward = 10.0 if correct else 0.0
 
     # 2. Attempt penalty
-    attempt_penalty = len(insert_attempts)
+    attempt_penalty = insert_attempts
     reward -= attempt_penalty
 
     # 3. Communication penalty
@@ -40,7 +42,7 @@ def compute_simple_reward(
     return {
         "total_reward": round(reward, 2),
         "correct_order_found": correct,
-        "num_attempts": len(insert_attempts),
+        "num_attempts": insert_attempts,
         "total_words": total_words,
         "attempt_penalty": attempt_penalty,
         "word_penalty": round(word_penalty, 2)

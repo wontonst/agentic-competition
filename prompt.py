@@ -52,6 +52,16 @@ You need to try to maximize the following reward function of the game:
 
 game_rounds = [
     {
+        "round": 0,
+        "correct_order": ["White", "Blue", "Green", "Black"],
+        "clues": {
+        "Agent1": "The blue token should be inserted second.",
+        "Agent2": "The black token should go last regardless of other rules.",
+        "Agent3": "White and black tokens come before blue tokens.",
+        "Agent4": "The green token comes before the black token."
+        },
+    },
+    {
         "round": 1,
         "correct_order": ["White", "Red", "Yellow", "Blue"],
         "clues": {
