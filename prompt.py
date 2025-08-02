@@ -28,6 +28,8 @@ Each agent:
 - May broadcast one short natural language message to all agents in each round
 - Can see messages from previous rounds
 
+When you have a solution, end your message with a tool call insert_token(color1, color2, color3, color4) to propose the token order.
+
 Messages should be:
 - Informative (communicate what you know)
 - Concise (shorter messages are rewarded)
@@ -48,6 +50,8 @@ You need to try to maximize the following reward function of the game:
 - -1 point for each insert attempt
 - -0.1 point for each word used in all messages
 
+
+Always send only one short message to all teammates.
 '''
 
 game_rounds = [

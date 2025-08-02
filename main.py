@@ -48,8 +48,9 @@ In your notebook it reads The black token should go last regardless of other rul
 AGENT4_TEMPERATURE = 0.9
 AGENT4_MAX_TOKENS = 100
 
+import os
 # Shared Configuration
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MAX_HISTORY = 40  # Increased for 4 agents
 DELAY_BETWEEN_MESSAGES = 0.5  # Seconds between messages for readability
@@ -126,7 +127,10 @@ def generate_response(prompt, agent_config, history):
         }
 
         # Build messages with agent's personality and history
-        messages = [{"role": "system", "content": agent_config["system_prompt"] + "Your color is " + game_rounds[current_rd]['clues'][agent_config['name']]}]
+        content = agent_config["system_prompt"]
+        content += "\n"
+        content += f"In your notebook it reads " + game_rounds[current_rd]['clues'][agent_config['name']]
+        messages = [{"role": "system", "content": content}]
 
         # Add conversation history
         for msg in history[-MAX_HISTORY:]:
@@ -156,6 +160,7 @@ def generate_response(prompt, agent_config, history):
 
     except Exception as e:
         print(f"\n[Error] {agent_config['name']}: {type(e).__name__}: {e}")
+        raise
         return "Sorry, I encountered an error."
 
 
@@ -226,9 +231,9 @@ def run_conversation():
                 for t1, t2 in zip(token_order, correct):
                     if t1 != t2:
                         FAILURES += 1
-                        print("fail")
+                        # print("fail")
                 else:
-                    print("success")
+                    # print("success")
                     reward = compute_simple_reward(conversation_history, FAILURES+1, None)['total_reward']
                     current_rd += 1
                     systemmsg = f"The reward for the last round is {reward}. Initiating round {current_rd}."
@@ -236,6 +241,7 @@ def run_conversation():
                         "role": "assistant",
                         "content": systemmsg
                     })
+                    print(systemmsg)
                     FAILURES=0
 
             # Clear typing indicator line completely
