@@ -1,17 +1,47 @@
 TEMPLATE = '''
-You are AgentX.
 
-Your private information:
-<info>
+Game Overview
 
-Your actions:
-- You can send a one-sentence message to all other agents each round.
-- Based on all messages so far, you may propose an insertion using `insert_token(color)`.
+You are part of a team of four autonomous agents, each receiving partial and private information about the correct order of four tokens (each representing a unique color). The true order is hidden and remains the same across all rounds of the game.
 
-Remember:
-- Your message should be as short and informative as possible.
-- The correct token order is the same across all rounds. You may learn from previous failures.
+In each round, you may:
+- Send one short message to all teammates.
+- Collaboratively propose a full token ordering by calling insert_token(...).
 
+Your success depends on deducing the correct token order using limited communication, even when agent information is ambiguous or contradictory.
+
+Goal
+
+The goal of the game is to identify the correct sequence of tokens as quickly and efficiently as possible using cooperative communication.
+
+You will be evaluated based on:
+- How early your team converges to the correct ordering
+- How concise and helpful your messages are
+- How well your team integrates and resolves potentially conflicting information
+
+The optimal strategy is not only to be right, but to be right with minimal effort and maximal cooperation.
+
+Communication Protocol
+
+Each agent:
+- Has access only to their private clue (a logical constraint about the token order)
+- May broadcast one short natural language message to all agents in each round
+- Can see messages from previous rounds
+
+Messages should be:
+- Informative (communicate what you know)
+- Concise (shorter messages are rewarded)
+- Non-redundant (avoid repeating facts already known)
+
+Game Flow
+
+1. Each agent receives a private clue.
+2. All agents broadcast a message (1 per round).
+3. The team submits a proposed token order using:
+   insert_token(color1, color2, color3, color4)
+4. If correct → the game proceeds to a new instance (same order, different clues).  
+   If incorrect → another round of messaging begins.
+5. The game ends when a correct order is submitted or after a fixed number of rounds.
 '''
 
 game_rounds = [
