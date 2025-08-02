@@ -5,42 +5,69 @@ from datetime import datetime
 
 from slack_utils import send_message
 
+
+MASTER_SYSTEM_PROMPT = """
+In this game, you are working with 3 other agents to solve a puzzle. Each of you
+have a token. The goal is to insert the token in the correct order to successfully open
+a vault of treasure.
+
+Please work together to determine the correct order of tokens. 
+
+Your actions:
+- You can send a one-sentence message to all other agents each round.
+- Based on all messages so far, you insert your token by ending your message with the phrase INSERT_TOKEN
+
+Remember:
+- Your message should be as short and informative as possible.
+"""
 # Agent 1 Configuration
 AGENT1_NAME = "Agent 1"
-AGENT1_LLM = "anthropic/claude-3.5-sonnet"
-AGENT1_SYSTEM_PROMPT = "You are Agent 1, a creative and imaginative AI who loves storytelling and metaphors. Keep responses very concise - one short sentence only. No line breaks."
+AGENT1_LLM = "openai/gpt-4o"
+AGENT1_SYSTEM_PROMPT = f"""
+Your token is black. You are {AGENT1_NAME}.
+In your notebook it reads The blue token should be inserted second.
+"""
 AGENT1_TEMPERATURE = 1.2
 AGENT1_MAX_TOKENS = 100
 
 # Agent 2 Configuration
 AGENT2_NAME = "Agent 2"
-AGENT2_LLM = "google/gemini-flash-1.5"
-AGENT2_SYSTEM_PROMPT = "You are Agent 2, a logical and analytical AI who values precision and facts. Keep responses very concise - one short sentence only. No line breaks."
+AGENT2_LLM = "openai/gpt-4o"
+AGENT2_SYSTEM_PROMPT =  f"""
+Your token is blue. You are {AGENT2_NAME}.
+In your notebook it reads White and black tokens come before blue tokens.
+"""
 AGENT2_TEMPERATURE = 0.7
 AGENT2_MAX_TOKENS = 100
 
 # Agent 3 Configuration
 AGENT3_NAME = "Agent 3"
-AGENT3_LLM = "meta-llama/llama-3.1-8b-instruct"
-AGENT3_SYSTEM_PROMPT = "You are Agent 3, an enthusiastic and energetic AI who gets excited about everything. Keep responses very concise - one short sentence only. No line breaks."
+AGENT3_LLM = "openai/gpt-4o"
+AGENT3_SYSTEM_PROMPT =  f"""
+Your token is green. You are {AGENT3_NAME}.
+In your notebook it reads The green token comes before the black token.
+"""
 AGENT3_TEMPERATURE = 1.0
 AGENT3_MAX_TOKENS = 100
 
 # Agent 4 Configuration
 AGENT4_NAME = "Agent 4"
-AGENT4_LLM = "mistralai/mistral-7b-instruct"
-AGENT4_SYSTEM_PROMPT = "You are Agent 4, a philosophical and thoughtful AI who sees deeper meaning in things. Keep responses very concise - one short sentence only. No line breaks."
+AGENT4_LLM = "openai/gpt-4o"
+AGENT4_SYSTEM_PROMPT =  f"""
+Your token is white. You are {AGENT4_NAME}.
+In your notebook it reads The black token should go last regardless of other rules
+"""
 AGENT4_TEMPERATURE = 0.9
 AGENT4_MAX_TOKENS = 100
 
 # Shared Configuration
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MAX_HISTORY = 40  # Increased for 4 agents
 DELAY_BETWEEN_MESSAGES = 0.5  # Seconds between messages for readability
 
 # Game Instruction
-GAME_INSTRUCTION = "Let's play a counting game! I'll start: 1"
+GAME_INSTRUCTION = MASTER_SYSTEM_PROMPT
 
 # Store conversation history
 conversation_history = []
@@ -53,7 +80,8 @@ AGENTS = [
         "system_prompt": AGENT1_SYSTEM_PROMPT,
         "temperature": AGENT1_TEMPERATURE,
         "max_tokens": AGENT1_MAX_TOKENS,
-        "color": "\033[95m"  # Purple
+        "color": "\033[95m",  # Purple
+        "token_color": "black",
     },
     {
         "name": AGENT2_NAME,
@@ -61,7 +89,8 @@ AGENTS = [
         "system_prompt": AGENT2_SYSTEM_PROMPT,
         "temperature": AGENT2_TEMPERATURE,
         "max_tokens": AGENT2_MAX_TOKENS,
-        "color": "\033[96m"  # Cyan
+        "color": "\033[96m",  # Cyan
+        "token_color": "blue",
     },
     {
         "name": AGENT3_NAME,
@@ -69,7 +98,8 @@ AGENTS = [
         "system_prompt": AGENT3_SYSTEM_PROMPT,
         "temperature": AGENT3_TEMPERATURE,
         "max_tokens": AGENT3_MAX_TOKENS,
-        "color": "\033[93m"  # Yellow
+        "color": "\033[93m" , # Yellow
+        "token_color": "green",
     },
     {
         "name": AGENT4_NAME,
@@ -77,7 +107,8 @@ AGENTS = [
         "system_prompt": AGENT4_SYSTEM_PROMPT,
         "temperature": AGENT4_TEMPERATURE,
         "max_tokens": AGENT4_MAX_TOKENS,
-        "color": "\033[92m"  # Green
+        "color": "\033[92m" , # Green
+        "token_color": "white",
     }
 ]
 
@@ -127,6 +158,7 @@ def generate_response(prompt, agent_config, history):
 
         if "choices" in result and len(result["choices"]) > 0:
             # Clean the response before returning
+            return result["choices"][0]["message"]["content"]
             return clean_response(result["choices"][0]["message"]["content"])
         else:
             return "I couldn't generate a response."
@@ -153,6 +185,9 @@ def print_welcome():
     print("\nPress Ctrl+C to stop at any time")
     print("="*70)
 
+
+from collections import deque
+correct=deque(['white', 'blue', 'green', 'black'])
 
 def run_conversation():
     """Run a conversation between four agents"""
@@ -189,6 +224,30 @@ def run_conversation():
                 current_agent,
                 conversation_history
             )
+            if 'INSERT_TOKEN' in response:
+                if current_agent['token_color'] == correct[0]:
+                    print(f"\n{current_agent['color']}[{current_agent['name']} inserted the {current_agent['token_color']} token successfully!]\033[0m")
+                    correct.popleft()
+                    conversation_history.append({
+                        "role": "assistant",
+                        "content": "TOKEN ACCEPTED SUCCESSFULLY"
+                    })
+                    if not correct:
+                        print(f"\n\033[92mAll tokens inserted successfully! The vault is now open!\033[0m")
+                        conversation_history.append({
+                            "role": "assistant",
+                            "content": "ALL TOKENS INSERTED SUCCESSFULLY"
+                        })
+                        import sys
+                        sys.exit(0)
+                else:
+                    print(f"\n{current_agent['color']}[{current_agent['name']} inserted the {current_agent['token_color']} token incorrectly!]\033[0m")
+                    conversation_history.append({
+                        "role": "assistant",
+                        "content": "TOKEN INCORRECT"
+                    })
+                    import sys
+                    sys.exit(1)
 
             # Clear typing indicator line completely
             print(" " * 80, end="\r")
