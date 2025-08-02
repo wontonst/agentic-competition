@@ -27,6 +27,7 @@ Each agent:
 - Has access only to their private clue (a logical constraint about the token order)
 - May broadcast one short natural language message to all agents in each round
 - Can see messages from previous rounds
+- Be as concise as possible and abbreviate where you can. Come up with your own abbreviations if necessary.
 
 When you have a solution, end your message with a tool call insert_token(color1, color2, color3, color4) to propose the token order.
 
@@ -48,7 +49,7 @@ Game Flow
 You need to try to maximize the following reward function of the game: 
 - +10 points for guessing the correct token order
 - -1 point for each insert attempt
-- -0.1 point for each word used in all messages
+- -0.1 point for each letter used in all messages
 
 
 Always send only one short message to all teammates.
