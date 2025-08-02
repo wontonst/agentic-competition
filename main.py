@@ -3,6 +3,8 @@ import sys
 import time
 from datetime import datetime
 
+from slack_utils import send_message
+
 # Agent 1 Configuration
 AGENT1_NAME = "Agent 1"
 AGENT1_LLM = "anthropic/claude-3.5-sonnet"
@@ -193,6 +195,7 @@ def run_conversation():
 
             # Print the response
             print_message(current_agent['name'], response, current_agent['color'])
+            send_message(f"{current_agent['name']}: {response}")
 
             # Update conversation history
             conversation_history.append({
