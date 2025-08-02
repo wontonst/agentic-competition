@@ -42,67 +42,73 @@ Game Flow
 4. If correct → the game proceeds to a new instance (same order, different clues).  
    If incorrect → another round of messaging begins.
 5. The game ends when a correct order is submitted or after a fixed number of rounds.
+
+You need to try to maximize the following reward function of the game: 
+- +10 points for guessing the correct token order
+- -1 point for each insert attempt
+- -0.1 point for each word used in all messages
+
 '''
 
 game_rounds = [
     {
         "round": 1,
-        "correct_order": ["Red", "Green", "Blue", "Yellow"],
+        "correct_order": ["White", "Red", "Yellow", "Blue"],
         "clues": {
-            "Agent1": "Blue is before Green.",
-            "Agent2": "Red is before Blue but not first.",
-            "Agent3": "Yellow comes after Green.",
-            "Agent4": "Green is the first token."
+            "Agent1": "Red comes after White.",
+            "Agent2": "Yellow comes before Blue.",
+            "Agent3": "White is not last.",
+            "Agent4": "Red is before Yellow."
         }
     },
     {
         "round": 2,
-        "correct_order": ["White", "Black", "Red", "Orange"],
+        "correct_order": ["Purple", "Orange", "Green", "Black"],
         "clues": {
-            "Agent1": "Red is after White unless Black is first.",
-            "Agent2": "Orange is last if Red is not third.",
-            "Agent3": "White must come before both Black and Red.",
-            "Agent4": "Black is before Red."
+            "Agent1": "Green comes after Orange.",
+            "Agent2": "Purple is the first token.",
+            "Agent3": "Black is the last token.",
+            "Agent4": "Orange comes before Green."
         }
     },
     {
         "round": 3,
-        "correct_order": ["Purple", "Yellow", "Green", "Blue"],
+        "correct_order": ["Teal", "Pink", "Cyan", "Magenta"],
         "clues": {
-            "Agent1": "Green is not before Yellow.",
-            "Agent2": "Purple is not last.",
-            "Agent3": "Blue is after Green.",
-            "Agent4": "Yellow is not first or last."
+            "Agent1": "Teal is earlier than Magenta.",
+            "Agent2": "Pink is not after Cyan.",
+            "Agent3": "Magenta is after Cyan.",
+            "Agent4": "Teal is first."
         }
     },
     {
         "round": 4,
-        "correct_order": ["Teal", "Pink", "Red", "Black"],
+        "correct_order": ["Red", "Orange", "Yellow", "Green"],
         "clues": {
-            "Agent1": "Teal comes before Red.",
-            "Agent2": "Pink is earlier than Black.",
-            "Agent3": "Red is not first.",
-            "Agent4": "Black is not last."
-        }
-    },
-    {
-        "round": 5,
-        "correct_order": ["Green", "Orange", "Red", "Blue"],
-        "clues": {
-            "Agent1": "Orange is next to Red.",
-            "Agent2": "Green is not next to Red.",
-            "Agent3": "Blue is not first or second.",
+            "Agent1": "Red is earlier than Green.",
+            "Agent2": "Orange comes after Red.",
+            "Agent3": "Yellow is between Orange and Green.",
             "Agent4": "Red is not last."
         }
     },
     {
-        "round": 6,
-        "correct_order": ["Cyan", "Magenta", "Yellow", "Black"],
+        "round": 5,
+        "correct_order": ["White", "Purple", "Teal", "Pink"],
         "clues": {
-            "Agent1": "Magenta comes after Yellow.",
-            "Agent2": "Cyan is two steps before Black.",
-            "Agent3": "Yellow is not next to Black.",
-            "Agent4": "Black is the last."
+            "Agent1": "Purple comes after White.",
+            "Agent2": "Teal is later than Purple.",
+            "Agent3": "Pink is not before Teal.",
+            "Agent4": "White is not last."
+        }
+    },
+    {
+        "round": 6,
+        "correct_order": ["Magenta", "Blue", "Black", "Cyan"],
+        "clues": {
+            "Agent1": "Magenta comes before Blue.",
+            "Agent2": "Black is later than Magenta.",
+            "Agent3": "Cyan is last.",
+            "Agent4": "Blue is not last."
         }
     }
 ]
